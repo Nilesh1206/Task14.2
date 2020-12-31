@@ -1,0 +1,54 @@
+- hosts: 192.168.43.164
+  vars_prompt:
+   - name: "Container"
+     prompt: Enter container name
+     private: no
+
+  tasks:
+   - name: Get infos on container
+     docker_container_info:
+       name: "{{ Container }}"
+     register: result
+
+
+   - name: Does container exist?
+     debug:
+       msg: "The container {{ 'exists' if result.exists else 'does not exist' }}"
+
+   - name: Print Name
+     debug:
+       var: result.container.Name
+     when: result.exists
+
+
+   - name: Print information about container
+     debug:
+       var: result.container.NetworkSettings.IPAddress
+     when: result.exists
+
+   - name: upd inve
+     blockinfile:
+       path: /etc/myhosts.txt
+       block: |
+        [docker]
+        {{ result.container.NetworkSettings.IPAddress }} ansible_ssh_user=root ansible_ssh_pass=Nilesh@123
+
+
+- hosts: docker
+  tasks:
+   - name: Installing httpd
+     package:
+       name: "httpd"
+       state: present
+   - name: Copy webpages
+     copy:
+       src: index.html
+       dest: /var/www/html
+
+  - name: start the services
+     command: "/usr/sbin/httpd"
+     register: x
+
+
+  - debug:
+         var: x
